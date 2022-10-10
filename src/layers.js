@@ -18,8 +18,8 @@ export const NewLayers = ({ id, layerRef, className }) => {
         width: "150px",
         height: "150px",
         position: "absolute",
-        left: (Math.random() * window.screen.width) + "px",
-        top: (Math.random() * window.screen.height) + "px",
+        left: (Math.random() * window.screen.width / 2) + "px",
+        top: (Math.random() * window.screen.height / 2) + "px",
       
       }}
     ></div>
