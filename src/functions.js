@@ -1,4 +1,4 @@
-const SNAP_THRESH = 10
+const SNAP_THRESH = 5
 export const MAX_MOUSE_SPEED = 3
 export const VERTICAL_LINE = "vertical"
 export const HORIZONTAL_LINE = "horizontal"
@@ -8,6 +8,7 @@ export const getLayerCoordsOfPoints = (x, y, width, height) => {
   y = Math.round(y)
   width = Math.round(width)
   height = Math.round(height)
+
   const v1 = {
     x,
     y,
@@ -24,91 +25,84 @@ export const getLayerCoordsOfPoints = (x, y, width, height) => {
   return [v1, v2, center]
 }
 
-const removeGuideLine = (directionLine, coord) => {
+export const removeGuideLine = (directionLine) => {
   const lines = document.querySelectorAll(`.${directionLine}`)
-  lines.forEach((line) => {
-    if (directionLine + coord !== line.id) {
-      document.getElementById(line.id).remove()
-    }
-  })
+  lines.forEach((guideLine) => guideLine.remove())
+}
+
+const getGuideLineNode = (top, left, height, width, border, className) => {
+  const root = document.getElementById("root")
+  const line = document.createElement("div")
+  line.style.position = "absolute"
+  line.className = `${className} guideline`
+
+  line.style.top = `${top}px`
+  line.style.left = `${left}px`
+  line.style.height = `${height}px`
+  line.style.width = `${width}px`
+
+  line.style.border = border
+
+  root.append(line)
 }
 
 const drawGuideLineCanvasCenter = (directionLine, coord, canvasDimentions) => {
-  if (document.getElementById(directionLine + coord)) {
-    return
-  }
-  const root = document.getElementById("root")
-  const line = document.createElement("div")
-  line.style.position = "absolute"
-  line.className = directionLine
-  line.id = directionLine + coord
-  line.style.top =
-    directionLine === VERTICAL_LINE ? 0 : `${canvasDimentions.height / 2}px`
-  line.style.left =
-    directionLine === VERTICAL_LINE ? `${canvasDimentions.width / 2}px` : 0
-  line.style.height =
-    directionLine === VERTICAL_LINE ? `${canvasDimentions.height}px` : 0
-  line.style.width =
-    directionLine === VERTICAL_LINE ? 0 : `${canvasDimentions.width}px`
-  line.style.border = "1px dashed #FF9B7B "
-  root.append(line)
+  getGuideLineNode(
+    directionLine === VERTICAL_LINE ? 0 : canvasDimentions.height / 2,
+    directionLine === VERTICAL_LINE ? canvasDimentions.width / 2 : 0,
+    directionLine === VERTICAL_LINE ? canvasDimentions.height : 0,
+    directionLine === VERTICAL_LINE ? 0 : canvasDimentions.width,
+    "1px dashed #FF9B7B",
+    directionLine
+  )
 }
 
-const drawGuideLineLayers = (directionLine, coord, canvasDimentions) => {
-  if (document.getElementById(directionLine + coord)) {
-    return
-  }
-  const root = document.getElementById("root")
-  const line = document.createElement("div")
-  line.style.position = "absolute"
-  line.className = directionLine
-  line.id = directionLine + coord
-  line.style.top = directionLine === VERTICAL_LINE ? 0 : `${coord}px`
-  line.style.left = directionLine === VERTICAL_LINE ? `${coord}px` : 0
-  line.style.height =
-    directionLine === VERTICAL_LINE ? `${canvasDimentions.height}px` : 0
-  line.style.width =
-    directionLine === VERTICAL_LINE ? 0 : `${canvasDimentions.width}px`
-  line.style.border = "1px dashed #777AFF"
-  root.append(line)
+const drawGuideLineLayers = (
+  directionLine,
+  coord,
+  canvasDimentions,
+  snapMin,
+  dragMax
+) => {
+  getGuideLineNode(
+    directionLine === VERTICAL_LINE
+      ? dragMax > snapMin
+        ? snapMin
+        : dragMax
+      : coord,
+    directionLine === VERTICAL_LINE
+      ? coord
+      : dragMax > snapMin
+      ? snapMin
+      : dragMax,
+    directionLine === VERTICAL_LINE ? Math.abs(dragMax - snapMin) : 0,
+
+    directionLine === VERTICAL_LINE ? 0 : Math.abs(dragMax - snapMin),
+    "1px dashed #777AFF",
+    directionLine
+  )
 }
 
 const drawGuideLineCanvasStart = (directionLine, coord, canvasDimentions) => {
-  if (document.getElementById(directionLine + coord)) {
-    return
-  }
-  const root = document.getElementById("root")
-  const line = document.createElement("div")
-  line.style.position = "absolute"
-  line.className = directionLine
-  line.id = directionLine + coord
-  line.style.top = 0
-  line.style.left = 0
-  line.style.height =
-    directionLine === VERTICAL_LINE ? `${canvasDimentions.height}px` : 0
-  line.style.width =
-    directionLine === VERTICAL_LINE ? 0 : `${canvasDimentions.width}px`
-  line.style.border = "1px solid #900C3F"
-  root.append(line)
+  getGuideLineNode(
+    0,
+    0,
+    directionLine === VERTICAL_LINE ? canvasDimentions.height : 0,
+    directionLine === VERTICAL_LINE ? 0 : canvasDimentions.width,
+    "1px solid #900C3F",
+    directionLine
+  )
 }
 
 const drawGuideLineCanvasEnd = (directionLine, coord, canvasDimentions) => {
-  if (document.getElementById(directionLine + coord)) {
-    return
-  }
-  const root = document.getElementById("root")
-  const line = document.createElement("div")
-  line.style.position = "absolute"
-  line.className = directionLine
-  line.id = directionLine + coord
-  line.style.top = VERTICAL_LINE ? 0 : `${canvasDimentions.width}px`
-  line.style.left = VERTICAL_LINE ? `${canvasDimentions.width - 2}px` : 0
-  line.style.height =
-    directionLine === VERTICAL_LINE ? `${canvasDimentions.height - 2}px` : 0
-  line.style.width =
-    directionLine === VERTICAL_LINE ? 0 : `${canvasDimentions.width}px`
-  line.style.border = "1px solid #900C3F"
-  root.append(line)
+  getGuideLineNode(
+    directionLine === VERTICAL_LINE ? 0 : canvasDimentions.width,
+    directionLine === VERTICAL_LINE ? canvasDimentions.width - 2 : 0,
+    directionLine === VERTICAL_LINE ? canvasDimentions.height - 2 : 0,
+    directionLine === VERTICAL_LINE ? 0 : canvasDimentions.width,
+    "1px solid #900C3F",
+    directionLine
+  )
 }
 
 export const getDraggingPointsCoords = (rect) => {
@@ -158,6 +152,7 @@ export const getSnapPointsCoords = () => {
     y: vertical,
   }
 }
+
 export const getSnappedCoords = (
   dragPointsArr,
   snapPointsArr,
@@ -165,69 +160,58 @@ export const getSnappedCoords = (
   rectAxes,
   lineDirection
 ) => {
-  let left = null
-  let top = null
-  dragPointsArr.forEach((dragAxes) => {
-    if (Math.abs(dragAxes - canvasDimention.height / 2) < SNAP_THRESH) {
-      if (lineDirection === HORIZONTAL_LINE) {
-        top = `${rectAxes - (dragAxes - canvasDimention.height / 2)}px`
-      }
-    }
-
-    if (Math.abs(dragAxes - canvasDimention.width / 2) < SNAP_THRESH) {
-      if (lineDirection === VERTICAL_LINE) {
-        left = `${rectAxes - (dragAxes - canvasDimention.width / 2)}px`
-      }
-    }
-
-    if (dragAxes < SNAP_THRESH) {
-      if (lineDirection === VERTICAL_LINE) {
-        left = "0px"
-      } else {
-        top = "0px"
+  for (let dragAxes of dragPointsArr) {
+    for (let snapAxes of snapPointsArr) {
+      if (Math.abs(dragAxes - snapAxes) < SNAP_THRESH) {
+        return rectAxes - (dragAxes - snapAxes)
       }
     }
 
     if (canvasDimention.width - dragAxes < SNAP_THRESH) {
+      return rectAxes - (dragAxes - canvasDimention.width)
+    }
+
+    if (dragAxes < SNAP_THRESH) {
+      return 0
+    }
+
+    if (Math.abs(dragAxes - canvasDimention.width / 2) < SNAP_THRESH) {
       if (lineDirection === VERTICAL_LINE) {
-        left = `${rectAxes - (dragAxes - canvasDimention.width)}px`
-      } else {
-        top = `${rectAxes - (dragAxes - canvasDimention.width)}px`
+        return rectAxes - (dragAxes - canvasDimention.width / 2)
       }
     }
-    snapPointsArr.forEach((snapAxes) => {
-      if (Math.abs(dragAxes - snapAxes) < SNAP_THRESH) {
-        console.log(Math.abs(dragAxes - snapAxes),"Math.abs(dragAxes - snapAxes)")
-        if (lineDirection === VERTICAL_LINE) {
-          left = `${rectAxes - (dragAxes - snapAxes)}px`
-        } else {
-          top = `${rectAxes - (dragAxes - snapAxes)}px`
-        }
-      }
-    })
-  })
 
-  return {
-    left,
-    top,
+    if (Math.abs(dragAxes - canvasDimention.height / 2) < SNAP_THRESH) {
+      if (lineDirection === HORIZONTAL_LINE) {
+        return rectAxes - (dragAxes - canvasDimention.height / 2)
+      }
+    }
   }
+
+  return null
 }
 
-export const drawGuidLines = (
+export const drawGuidLinesHorizontal = (
   dragPointsArr,
   snapPointsArr,
   canvasDimention,
   lineDirection,
   coordAxes
 ) => {
-  removeGuideLine(lineDirection, coordAxes)
+  removeGuideLine(lineDirection)
 
-  dragPointsArr.forEach((dragAxes) => {
-    if (Math.abs(dragAxes - canvasDimention.width / 2) < SNAP_THRESH) {
+  dragPointsArr.y.forEach((dragAxes) => {
+    if (
+      lineDirection === VERTICAL_LINE &&
+      Math.abs(dragAxes - canvasDimention.width / 2) < SNAP_THRESH
+    ) {
       drawGuideLineCanvasCenter(lineDirection, coordAxes, canvasDimention)
     }
 
-    if (Math.abs(dragAxes - canvasDimention.height / 2) < SNAP_THRESH) {
+    if (
+      lineDirection === HORIZONTAL_LINE &&
+      Math.abs(dragAxes - canvasDimention.height / 2) < SNAP_THRESH
+    ) {
       drawGuideLineCanvasCenter(lineDirection, coordAxes, canvasDimention)
     }
 
@@ -239,9 +223,66 @@ export const drawGuidLines = (
       drawGuideLineCanvasEnd(lineDirection, coordAxes, canvasDimention)
     }
 
-    snapPointsArr.forEach((snapAxes) => {
+    snapPointsArr.y.forEach((snapAxes) => {
       if (Math.abs(dragAxes - snapAxes) < SNAP_THRESH) {
-        drawGuideLineLayers(lineDirection, snapAxes, canvasDimention)
+        const snapXmin = Math.min(...snapPointsArr.x)
+        const dragXmax = Math.max(...dragPointsArr.x)
+
+        drawGuideLineLayers(
+          lineDirection,
+          snapAxes,
+          canvasDimention,
+          snapXmin,
+          dragXmax
+        )
+      }
+    })
+  })
+}
+
+export const drawGuidLinesVertical = (
+  dragPointsArr,
+  snapPointsArr,
+  canvasDimention,
+  lineDirection,
+  coordAxes
+) => {
+  removeGuideLine(lineDirection)
+
+  dragPointsArr.x.forEach((dragAxes) => {
+    if (
+      lineDirection === VERTICAL_LINE &&
+      Math.abs(dragAxes - canvasDimention.width / 2) < SNAP_THRESH
+    ) {
+      drawGuideLineCanvasCenter(lineDirection, coordAxes, canvasDimention)
+    }
+
+    if (
+      lineDirection === HORIZONTAL_LINE &&
+      Math.abs(dragAxes - canvasDimention.height / 2) < SNAP_THRESH
+    ) {
+      drawGuideLineCanvasCenter(lineDirection, coordAxes, canvasDimention)
+    }
+
+    if (dragAxes < SNAP_THRESH) {
+      drawGuideLineCanvasStart(lineDirection, coordAxes, canvasDimention)
+    }
+
+    if (canvasDimention.width - dragAxes < SNAP_THRESH) {
+      drawGuideLineCanvasEnd(lineDirection, coordAxes, canvasDimention)
+    }
+
+    snapPointsArr.x.forEach((snapAxes) => {
+      if (Math.abs(dragAxes - snapAxes) < SNAP_THRESH) {
+        const snapYMax = Math.min(...snapPointsArr.y)
+        const dragYMin = Math.max(...dragPointsArr.y)
+        drawGuideLineLayers(
+          lineDirection,
+          snapAxes,
+          canvasDimention,
+          snapYMax,
+          dragYMin
+        )
       }
     })
   })
