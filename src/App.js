@@ -2,11 +2,13 @@ import { useState, useEffect } from "react"
 import {
   getSnapPointsCoords,
   getDraggingPointsCoords,
-  drawGuidLines,
+  drawGuidLinesHorizontal,
   getSnappedCoords,
   VERTICAL_LINE,
   HORIZONTAL_LINE,
   MAX_MOUSE_SPEED,
+  removeGuideLine,
+  drawGuidLinesVertical
 } from "./functions"
 import * as Styled from "./styled"
 import "./App.css"
@@ -17,10 +19,9 @@ function App() {
   const createNewLayers = () => setLayers([...layers, layers.length + 1])
 
   function mouseDown(e) {
-
     window.addEventListener("mousemove", mouseMove, false)
     window.addEventListener("mouseup", mouseUp, false)
-    
+
     const element = e.target
 
     let clickX = e.clientX
@@ -36,7 +37,7 @@ function App() {
     function mouseMove(e) {
       const deltaX = clickX - e.clientX
       const deltaY = clickY - e.clientY
-      
+
       const mouseSpeedX = iinitialX - e.clientX
       const mouseSpeedY = iinitialY - e.clientY
 
@@ -58,21 +59,21 @@ function App() {
         width: parseInt(window.screen.width),
         height: parseInt(window.screen.height),
       }
-
-      drawGuidLines(
-        dragPoints.x,
-        snapPoints.x,
-        canvasDimention,
-        VERTICAL_LINE,
-        x
-      )
-
-      drawGuidLines(
-        dragPoints.y,
-        snapPoints.y,
+   
+      drawGuidLinesHorizontal(
+        dragPoints,
+        snapPoints,
         canvasDimention,
         HORIZONTAL_LINE,
         y
+      )
+
+      drawGuidLinesVertical(
+        dragPoints,
+        snapPoints,
+        canvasDimention,
+        VERTICAL_LINE,
+        x
       )
 
       let top = null
@@ -84,8 +85,8 @@ function App() {
           snapPoints.x,
           canvasDimention,
           rect.left,
-          VERTICAL_LINE,
-        ).left
+          VERTICAL_LINE
+        )
       }
 
       if (Math.abs(mouseSpeedY) < MAX_MOUSE_SPEED) {
@@ -94,15 +95,18 @@ function App() {
           snapPoints.y,
           canvasDimention,
           rect.top,
-          HORIZONTAL_LINE,
-        ).top
+          HORIZONTAL_LINE
+        )
       }
 
-      element.style.left = left || `${parseInt(initialLeft) - deltaX}px`
-      element.style.top = top || `${parseInt(initialTop) - deltaY}px`
+      element.style.left = `${left ? left : parseInt(initialLeft) - deltaX}px`
+      element.style.top = `${top ? top : parseInt(initialTop) - deltaY}px`
     }
 
     function mouseUp() {
+      removeGuideLine(HORIZONTAL_LINE)
+      removeGuideLine(VERTICAL_LINE)
+
       const allLayers = document.querySelectorAll(".layer")
       allLayers.forEach((layer) => {
         layer.classList.remove("draggingLayer")
@@ -115,7 +119,7 @@ function App() {
 
   useEffect(() => {
     layers.map((id) => {
-      const element = document.getElementById(id)
+      const element = document.getElementById(`l-${id}`)
       element.addEventListener("mousedown", mouseDown)
     })
   })
@@ -125,7 +129,7 @@ function App() {
       <Styled.Button onClick={createNewLayers}> addNewLayer </Styled.Button>
 
       {layers.map((layer) => {
-        return <NewLayers id={layer} key={layer} className={"layer"} />
+        return <NewLayers id={`l-${layer}`} key={layer} className={"layer"} />
       })}
     </>
   )
